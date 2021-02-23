@@ -147,6 +147,8 @@ async def on_ready():
 	await client.change_presence(status=discord.Status.idle, activity=discord.Game('Listening to -'))
 	print("Ready")
 
+#spoiler: These ctftime commands are directly from nullctf :P --> topteams(), upcoming().
+	
 @client.command()
 async def topteams(ctx):
 	leaderboards = ""
