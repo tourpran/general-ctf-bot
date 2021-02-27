@@ -11,6 +11,7 @@ import asyncio
 
 sys.path.append("..")
 
+ROLENAME = None
 CURRENT_CTFS = []	# list of objects of class CTF
 SHARED_LOCK = None	# mutex
 IST = datetime.timedelta(hours=5, minutes=30)
@@ -209,6 +210,7 @@ async def create(ctx, *args):
 	arg2 = args[0]
 	if str(ctx.channel) == "_bot_query":
 		global category_info
+		global ROLENAME
 		name = arg2
 		for i in CURRENT_CTFS:
 			if i.get_ctf_name().lower() == name:
@@ -218,8 +220,10 @@ async def create(ctx, *args):
 		category_obj = await ctx.guild.create_category(arg2)
 		ctf_ob = CTF(category_obj)
 		CURRENT_CTFS.append(ctf_ob)
+		rolename = await ctx.guild.create_role(name=arg2)
+		ROLENAME = rolename
 		# category = discord.utils.get(ctx.guild.categories, name=name)
-		chan_ob = await ctx.guild.create_text_channel("main", category=category_obj)  
+		chan_ob = await ctx.guild.create_text_channel("main", category=category_obj, sync_permission=False)
 		ctf_ob.add_challenge(chan_ob, False)
 		title, start, end = get_ctf_info(arg2)
 		if title:
@@ -229,6 +233,8 @@ async def create(ctx, *args):
 		category_info = arg2
 		embedVar = discord.Embed(title="", description=f"Kill the CTF. Channel created {category_info}", color=0x00ff00)
 		await ctx.send(embed=embedVar) 
+		await chan_ob.set_permissions(ctx.guild.default_role, send_messages=False, read_messages=False)
+		await chan_ob.set_permissions(rolename, send_messages=True, read_messages=True)
 	else:
 		await ctx.send("Go to bot query !!")
 
@@ -239,6 +245,7 @@ async def addchall(ctx, *args):
 	challname = args[0]
 	if str(ctx.channel) == "main":
 		global category_info 
+		global ROLENAME
 		name = challname
 		ctf_ob = get_ctf_from_context(ctx)
 		if not ctf_ob:
@@ -249,10 +256,16 @@ async def addchall(ctx, *args):
 			await ctx.send("Sorry! Challenge Exists.")
 			return
 		category = ctf_ob.get_category()
-		channel_ob = await ctx.guild.create_text_channel(name , category=category)
+		print(category)
+		channel_ob = await ctx.guild.create_text_channel(name , category=category, sync_permission=False)
 		ctf_ob.add_challenge(channel_ob, True)
 		embedVar = discord.Embed(title="", description=f"challenge created {name}", color=0x00ff00)
 		await ctx.send(embed=embedVar)
+		print(category)
+		await channel_ob.set_permissions(ctx.guild.default_role, send_messages=False, read_messages=False)
+		print(type(category))
+		await channel_ob.set_permissions(ROLENAME, send_messages=True, read_messages=True)
+		print(category)
 	else:
 		await ctx.send("Go to main !!")
 
