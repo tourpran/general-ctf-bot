@@ -172,6 +172,7 @@ async def over(ctx):
 	global category_info
 	if str(ctx.channel) == "main":
 		# global challenges_solved
+		global ROLENAME
 		challenges_solved = []
 		ctf_ob = get_ctf_from_context(ctx)
 		if not ctf_ob:
@@ -181,8 +182,9 @@ async def over(ctx):
 		challenges_solved = list(map(str, ctf_ob.get_solved_challenges()))
 		CURRENT_CTFS.remove(ctf_ob)
 		await ctx.send(''.join(challenges_solved))
-		await ctx.send(f"Hope you won the ctf. \n**CTF OVER - {ctf_ob.get_ctf_name()}**")
+		await ctx.send(f"kuddos to everyone who fought hard. \n**CTF OVER - {ctf_ob.get_ctf_name()}**")
 		challenges_solved = ":triangular_flag_on_post:**SOLVED CHALLENGES**"
+		await ROLENAME.delete()
 	else:
 		await ctx.send("Cant do it 404 !!")
 
@@ -256,16 +258,14 @@ async def addchall(ctx, *args):
 			await ctx.send("Sorry! Challenge Exists.")
 			return
 		category = ctf_ob.get_category()
-		print(category)
 		channel_ob = await ctx.guild.create_text_channel(name , category=category, sync_permission=False)
 		ctf_ob.add_challenge(channel_ob, True)
 		embedVar = discord.Embed(title="", description=f"challenge created {name}", color=0x00ff00)
 		await ctx.send(embed=embedVar)
-		print(category)
 		await channel_ob.set_permissions(ctx.guild.default_role, send_messages=False, read_messages=False)
-		print(type(category))
 		await channel_ob.set_permissions(ROLENAME, send_messages=True, read_messages=True)
-		print(category)
+
+
 	else:
 		await ctx.send("Go to main !!")
 
