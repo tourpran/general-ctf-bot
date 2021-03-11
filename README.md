@@ -37,17 +37,17 @@ It is always recomended to give admin permissions to the bot for having a smooth
 * Whenever you are in doubt ``-help`` will show all commands.
 
 ## Some cool pics: 
-``in _bot_query``
+### in _bot_query
 ![](https://github.com/pranavkrish04/general-ctf-bot/blob/main/images/s1.png)
-``in joinctf``
+### in joinctf
 ![](https://github.com/pranavkrish04/general-ctf-bot/blob/main/images/s2.png)
-``in main channel of the ctf created``
+### in main channel of the ctf created
 ![](https://github.com/pranavkrish04/general-ctf-bot/blob/main/images/s3.png)
-``in challenge channel``
+### in challenge channel
 ![](https://github.com/pranavkrish04/general-ctf-bot/blob/main/images/s4.png)
-``in main everyone gets notified``
+### in main everyone gets notified
 ![](https://github.com/pranavkrish04/general-ctf-bot/blob/main/images/s5.png)
-``in main see all the challenges completed by others``
+### in main see all the challenges completed by others
 ![](https://github.com/pranavkrish04/general-ctf-bot/blob/main/images/s6.png)
-``in main end the ctf and delete the roles and make the channels public``
+### in main end the ctf and delete the roles and make the channels public
 ![](https://github.com/pranavkrish04/general-ctf-bot/blob/main/images/s7.png)
