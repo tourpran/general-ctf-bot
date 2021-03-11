@@ -150,6 +150,17 @@ async def on_ready():
 
 #spoiler: These ctftime commands are directly from nullctf :P --> topteams(), upcoming().
 	
+
+@client.command()
+async def join(ctx, *, role):
+	if str(ctx.channel) == "joinctf":
+		member = ctx.message.author 
+		role = discord.utils.get(ctx.guild.roles, name=role)
+		await member.add_roles(role)
+		await ctx.message.add_reaction('✅')
+	else:
+		await ctx.send("```use this in joinctf channel please !```")
+
 @client.command()
 async def topteams(ctx):
 	leaderboards = ""
@@ -175,6 +186,11 @@ async def over(ctx):
 		global ROLENAME
 		challenges_solved = []
 		ctf_ob = get_ctf_from_context(ctx)
+		ctf_ob = get_ctf_from_context(ctx)
+		channels = ctf_ob.get_category().channels
+		for i in channels:
+			await i.set_permissions(ctx.guild.default_role, send_messages=True, read_messages=True)
+
 		if not ctf_ob:
 			await ctx.send("Can't call over from a non-ctf channel!")
 			return
@@ -185,8 +201,8 @@ async def over(ctx):
 		await ctx.send(f"kuddos to everyone who fought hard. \n**CTF OVER - {ctf_ob.get_ctf_name()}**")
 		challenges_solved = ":triangular_flag_on_post:**SOLVED CHALLENGES**"
 		await ROLENAME.delete()
-	else:
-		await ctx.send("Cant do it 404 !!")
+
+		
 
 @client.command()
 async def help(ctx):
@@ -201,15 +217,14 @@ solved   - mark the challenge solved in the respective channel only [-solved]
 stop     - dont bother with this [...]
 topteams - top teams of the world [-topteams]
 setcreds - set creds [-setcreds url login password]
-upcoming - upcoming N ctfs [-upcoming N=3]```'''
+upcoming - upcoming N ctfs [-upcoming N=3]
+join     - join a ctf the team is playing [-join ctfname]```'''
 	await ctx.send(msg)
 
 @client.command(usage='Need ctf name. Type `-help` to see usage', aliases=["newctf"])
-async def create(ctx, *args):
-	if (not args) or (not args[0]):
-		await ctx.send("Need ctf name. Type `-help` to see usage")
-		return
-	arg2 = args[0]
+async def create(ctx, *, ctfname):
+
+	arg2 = ctfname
 	if str(ctx.channel) == "_bot_query":
 		global category_info
 		global ROLENAME
@@ -241,10 +256,8 @@ async def create(ctx, *args):
 		await ctx.send("Go to bot query !!")
 
 @client.command(aliases=["add"])
-async def addchall(ctx, *args):
-	if (not args) or (not args[0]):
-		await ctx.send("Need challenge name. Type `-help` to see usage")
-	challname = args[0]
+async def addchall(ctx, *, challname):
+
 	if str(ctx.channel) == "main":
 		global category_info 
 		global ROLENAME
@@ -356,6 +369,7 @@ async def all(ctx):
 
 @client.command()
 async def solved(ctx):
+	global ROLENAME
 	# if str(ctx.channel) == "main":
 	# 	await ctx.send("Cant solve main dude !!")
 	# 	return
@@ -381,10 +395,7 @@ async def solved(ctx):
 	# challenges_solved += f"```{channel} solved by {author}```"
 	# post a message to "main" channel that X is solved by Y
 	await ctx.send("Good Job !!")
-	category = discord.utils.get(ctx.guild.categories, name="solved-challenges")
-	if not category:
-		category = await ctx.guild.create_category('solved-challenges')
-	await ctx.channel.edit(syncpermissoins=True, category=category, name=f"{ctf_ob.get_ctf_name()}-{channel.name}")
+	await ctx.channel.edit(name=f"solved-{channel.name}")
 
 @client.command()
 async def clean(ctx, amount=5):
