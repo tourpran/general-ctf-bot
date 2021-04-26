@@ -1,6 +1,8 @@
 import datetime
 import re
 import discord
+from discord import CategoryChannel
+import os
 from discord.ext import tasks, commands
 # from datetime import *
 import dateparser # pip install dateparser
@@ -11,7 +13,6 @@ import asyncio
 
 sys.path.append("..")
 
-ROLENAME = None
 CURRENT_CTFS = []	# list of objects of class CTF
 SHARED_LOCK = None	# mutex
 IST = datetime.timedelta(hours=5, minutes=30)
@@ -162,6 +163,13 @@ async def join(ctx, *, role):
 		await ctx.send("```use this in joinctf channel please !```")
 
 @client.command()
+async def deletectf(ctx, *, category: CategoryChannel):
+	channels = category.channels
+	for i in channels:
+		if(str(i) != "main"):
+			await i.delete()	
+
+@client.command()
 async def topteams(ctx):
 	leaderboards = ""
 	year = str(datetime.datetime.today().year)
@@ -181,13 +189,13 @@ async def topteams(ctx):
 @client.command()
 async def over(ctx):
 	global category_info
+
 	if str(ctx.channel) == "main":
 		# global challenges_solved
-		global ROLENAME
 		challenges_solved = []
 		ctf_ob = get_ctf_from_context(ctx)
-		ctf_ob = get_ctf_from_context(ctx)
 		channels = ctf_ob.get_category().channels
+		category = ctf_ob.get_category()
 		for i in channels:
 			await i.set_permissions(ctx.guild.default_role, send_messages=True, read_messages=True)
 
@@ -196,11 +204,15 @@ async def over(ctx):
 			return
 		# async with SHARED_LOCK:
 		challenges_solved = list(map(str, ctf_ob.get_solved_challenges()))
+		rolename = discord.utils.get(ctx.guild.roles, name=str(category))
+		await rolename.delete()
 		CURRENT_CTFS.remove(ctf_ob)
 		await ctx.send(''.join(challenges_solved))
 		await ctx.send(f"kuddos to everyone who fought hard. \n**CTF OVER - {ctf_ob.get_ctf_name()}**")
 		challenges_solved = ":triangular_flag_on_post:**SOLVED CHALLENGES**"
-		await ROLENAME.delete()
+
+		for filename in os.listdir("./"+str(category)):
+			await ctx.send(file=discord.File('./'+str(category)+"/"+str(filename)))
 
 		
 
@@ -227,7 +239,6 @@ async def create(ctx, *, ctfname):
 	arg2 = ctfname
 	if str(ctx.channel) == "_bot_query":
 		global category_info
-		global ROLENAME
 		name = arg2
 		for i in CURRENT_CTFS:
 			if i.get_ctf_name().lower() == name:
@@ -238,7 +249,6 @@ async def create(ctx, *, ctfname):
 		ctf_ob = CTF(category_obj)
 		CURRENT_CTFS.append(ctf_ob)
 		rolename = await ctx.guild.create_role(name=arg2)
-		ROLENAME = rolename
 		# category = discord.utils.get(ctx.guild.categories, name=name)
 		chan_ob = await ctx.guild.create_text_channel("main", category=category_obj, sync_permission=False)
 		ctf_ob.add_challenge(chan_ob, False)
@@ -252,15 +262,16 @@ async def create(ctx, *, ctfname):
 		await ctx.send(embed=embedVar) 
 		await chan_ob.set_permissions(ctx.guild.default_role, send_messages=False, read_messages=False)
 		await chan_ob.set_permissions(rolename, send_messages=True, read_messages=True)
+		os.mkdir("./" + str(name))
 	else:
 		await ctx.send("Go to bot query !!")
+
 
 @client.command(aliases=["add"])
 async def addchall(ctx, *, challname):
 
 	if str(ctx.channel) == "main":
 		global category_info 
-		global ROLENAME
 		name = challname
 		ctf_ob = get_ctf_from_context(ctx)
 		if not ctf_ob:
@@ -271,12 +282,13 @@ async def addchall(ctx, *, challname):
 			await ctx.send("Sorry! Challenge Exists.")
 			return
 		category = ctf_ob.get_category()
+		rolename = discord.utils.get(ctx.guild.roles, name=category)
 		channel_ob = await ctx.guild.create_text_channel(name , category=category, sync_permission=False)
 		ctf_ob.add_challenge(channel_ob, True)
 		embedVar = discord.Embed(title="", description=f"challenge created {name}", color=0x00ff00)
 		await ctx.send(embed=embedVar)
 		await channel_ob.set_permissions(ctx.guild.default_role, send_messages=False, read_messages=False)
-		await channel_ob.set_permissions(ROLENAME, send_messages=True, read_messages=True)
+		await channel_ob.set_permissions(rolename, send_messages=True, read_messages=True)
 
 
 	else:
@@ -360,7 +372,6 @@ async def all(ctx):
 			if i.is_solved():
 				m = m.replace(ctf_ob.get_ctf_name()+'-', '')
 			challenges_solved.append(m)
-		# challenges_solved = list(filter(lambda i: i, map(str, ctf_ob.get_all_challenges())))
 		if not challenges_solved:
 			challenges_solved = ['** No Challenges Added **']
 		await ctx.send(''.join(challenges_solved))
@@ -369,10 +380,7 @@ async def all(ctx):
 
 @client.command()
 async def solved(ctx):
-	global ROLENAME
-	# if str(ctx.channel) == "main":
-	# 	await ctx.send("Cant solve main dude !!")
-	# 	return
+
 	ctf_ob = get_ctf_from_context(ctx)
 	if not ctf_ob:
 		await ctx.send("Tried to call `solved` on a non-ctf channel")
@@ -394,8 +402,21 @@ async def solved(ctx):
 	# global challenges_solved
 	# challenges_solved += f"```{channel} solved by {author}```"
 	# post a message to "main" channel that X is solved by Y
+
+	storemessages = await channel.history(limit=200).flatten()
+	storemessages = storemessages[::-1]
+	f = open("./"+str(ctf_ob.get_category())+"/"+str(channel), 'w')
+
+	for i in storemessages:
+		f.write(i.content + "\n")
+	
+	f.close()
+
+
 	await ctx.send("Good Job !!")
 	await ctx.channel.edit(name=f"solved-{channel.name}")
+
+
 
 @client.command()
 async def clean(ctx, amount=5):
@@ -427,11 +448,11 @@ async def on_command_error(ctx, error):
 
 @client.command()
 async def stop(ctx):
-	if str(ctx.author) in ['tourpran#2362', 'x0r19x91#0705']:
+	if str(ctx.author) in ['tourpran#2362']:
 		await ctx.send("Bye i am going to sleep now !!")
 		await ctx.bot.logout()
 	else:
-		await ctx.send("Sorry dude! I listen to tourpran and x0r19x91 only.")
+		await ctx.send("Admin Command.")
 
 def get_current_category(ctx):
 	return ctx.channel.category
