@@ -249,8 +249,10 @@ async def create(ctx, *, ctfname):
 		ctf_ob = CTF(category_obj)
 		CURRENT_CTFS.append(ctf_ob)
 		rolename = await ctx.guild.create_role(name=arg2)
-		# category = discord.utils.get(ctx.guild.categories, name=name)
-		chan_ob = await ctx.guild.create_text_channel("main", category=category_obj, sync_permission=False)
+		categorymain = discord.utils.get(ctx.guild.categories, name=name)
+		await categorymain.set_permissions(rolename, read_messages=True, send_messages=True, connect=True, speak=True)
+		await categorymain.set_permissions(ctx.guild.default_role, read_messages=False, connect=False)
+		chan_ob = await ctx.guild.create_text_channel("main", category=category_obj, sync_permission=True)
 		ctf_ob.add_challenge(chan_ob, False)
 		title, start, end = get_ctf_info(arg2)
 		if title:
@@ -260,8 +262,6 @@ async def create(ctx, *, ctfname):
 		category_info = arg2
 		embedVar = discord.Embed(title="", description=f"Kill the CTF. Channel created {category_info}", color=0x00ff00)
 		await ctx.send(embed=embedVar) 
-		await chan_ob.set_permissions(ctx.guild.default_role, send_messages=False, read_messages=False)
-		await chan_ob.set_permissions(rolename, send_messages=True, read_messages=True)
 		os.mkdir("./" + str(name))
 	else:
 		await ctx.send("Go to bot query !!")
@@ -282,13 +282,12 @@ async def addchall(ctx, *, challname):
 			await ctx.send("Sorry! Challenge Exists.")
 			return
 		category = ctf_ob.get_category()
-		rolename = discord.utils.get(ctx.guild.roles, name=category)
-		channel_ob = await ctx.guild.create_text_channel(name , category=category, sync_permission=False)
+		rolename = discord.utils.get(ctx.guild.roles, name=str(category))
+		print(rolename)
+		channel_ob = await ctx.guild.create_text_channel(name , category=category, sync_permission=True)
 		ctf_ob.add_challenge(channel_ob, True)
 		embedVar = discord.Embed(title="", description=f"challenge created {name}", color=0x00ff00)
 		await ctx.send(embed=embedVar)
-		await channel_ob.set_permissions(ctx.guild.default_role, send_messages=False, read_messages=False)
-		await channel_ob.set_permissions(rolename, send_messages=True, read_messages=True)
 
 
 	else:
