@@ -30,6 +30,8 @@ Now that you have the code copied just save that into your ``token.txt`` file.
 * Go to your OAuth2 section and click the bot option, then open the url generated to invite the bot to your server. 
 ![4](https://github.com/pranavkrish04/general-ctf-bot/blob/main/images/ss4.jpg)
 It is always recomended to give admin permissions to the bot for having a smooth workflow and to have less/no errors.
+* Go to your Bot section and click the server members intent switch
+![5](//github.com/pranavkrish04/general-ctf-bot/blob/main/images/ss5.jpg)
 
 ## Usage: 
 * Create a channel called ``_bot_query`` in your server. Use this channel solely for using bot commands. (Bot wont work in other channels)

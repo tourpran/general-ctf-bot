@@ -131,7 +131,10 @@ headers = {
 	'User-Agent': 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:61.0) Gecko/20100101 Firefox/61.0',
 }
 
-client = commands.Bot(command_prefix='-')
+intents = discord.Intents.default()
+intents.members = True
+
+client = commands.Bot(command_prefix='-',intents=intents)
 
 client.remove_command('help')
 
@@ -407,7 +410,27 @@ async def solved(ctx):
 	f = open("./"+str(ctf_ob.get_category())+"/"+str(channel), 'w')
 
 	for i in storemessages:
-		f.write(i.content + "\n")
+		start = 0
+		content = i.content
+		while (start := content.find('<@!')) != -1:
+			end = content.find('>',start)
+			name = ctx.guild.get_member(int(content[start+3:end])).name
+			if name == None:
+				name = 'Deleted User'
+			content = content[:start] + f'@{name}' + content[end+1:]
+		while (start := content.find('<@&')) != -1:
+			end = content.find('>',start)
+			name = ctx.guild.get_role(int(content[start+3:end])).name
+			if name == None:
+				name = 'Deleted Role'
+			content = content[:start] + f'@{name}' + content[end+1:]
+		while (start := content.find('<#')) != -1:
+			end = content.find('>',start)
+			name = ctx.guild.get_channel(int(content[start+2:end])).name
+			if name == None:
+				name = 'deleted-channel'
+			content = content[:start] + f'#{name}' + content[end+1:]
+		f.write(i.author.name + '> '+ content + "\n")	
 	
 	f.close()
 
